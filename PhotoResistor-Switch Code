@@ -1,0 +1,82 @@
+/*this tells the program itself to start
+referencing from the necessary libraries to
+know what certain commands in the setup and loop mean*/
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_PWMServoDriver.h"
+#include <Servo.h>
+//this tells the arduino that it will be using a motor shield and two DC motors run through ports 1 and 2
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+Adafruit_DCMotor *myMotor1 = AFMS.getMotor(1); //left motor
+Adafruit_DCMotor *myMotor2 = AFMS.getMotor(2); //right motor
+int lightPin = A5;  //define a pin for Photo resistor
+int LeftSwitch = 12; //define a pin for the left Bumper
+int RightSwitch = 10; //define a pin for the Right Bumper
+
+void setup()
+{
+	AFMS.begin(); //begins running through the motor shield
+	myMotor1->run(RELEASE); //begins running the motor in port 1
+	myMotor2->run(RELEASE); //begins running the motor in port 2
+	Serial.begin(9600); //starts monitoring the values from the analog input
+	pinMode(RightSwitch, INPUT_PULLUP);
+	pinMode(LeftSwitch, INPUT_PULLUP);
+}
+
+void loop()
+{
+	//return;
+
+	Serial.println(analogRead(lightPin)); //Write the value of the photoresistor to the serial monitor.
+
+	/*
+		While the switches on the front of the robot are not active, it will work under
+		conditions based on the ambient light. If it comes underneath a bright light, it
+		will stop.
+	*/
+
+	while (digitalRead(LeftSwitch) == 0 && digitalRead(RightSwitch) == 0)
+	{
+		if (analogRead(lightPin) > 650)
+		{
+			myMotor1->setSpeed(0);
+			myMotor2->setSpeed(0);
+		}
+		else
+		{
+			myMotor1->setSpeed(50);
+			myMotor2->setSpeed(50);
+		}
+	}
+	delay(50);
+/*
+  If one of the switches is pressed, the robot will back up and turn a different direction
+  and then procede running forward until either it comes to another obstacle, or a bright
+  light
+*/
+
+if (digitalRead(LeftSwitch) == 1)
+{
+	myMotor1->run(BACKWARD);
+	myMotor2->run(BACKWARD);
+	delay(1000);
+	myMotor1->run(FORWARD);
+	myMotor2->run(BACKWARD);
+	delay(1000);
+}
+
+if (analogRead(RightSwitch) == 1)
+{
+	myMotor1->run(BACKWARD);
+	myMotor2->run(BACKWARD);
+	delay(1000);
+	myMotor1->run(BACKWARD);
+	myMotor2->run(FORWARD);
+	delay(1000);
+}
+}
+/*
+Peter Fickenwirth's Code
+22.201 Robot Project
+Fall Semester 2014=5
+*/
