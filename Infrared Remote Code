@@ -1,0 +1,80 @@
+#include <IRremote.h>
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_PWMServoDriver.h"
+#include <Servo.h>
+//this tells the arduino that it will be using a motor shield and two DC motors run through ports 1 and 2
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+Adafruit_DCMotor *myMotor1 = AFMS.getMotor(1); //left motor
+Adafruit_DCMotor *myMotor2 = AFMS.getMotor(2); //right motor
+int RECV_PIN = 7; //defines the pin that the IR Receiver is in
+IRrecv irrecv(RECV_PIN); //tells the Arduino an IR Receiver is being used
+decode_results results; //tells the Arduino to decode the IR Signals
+
+
+void setup()
+{
+	AFMS.begin(); //begins running through the motor shield
+	myMotor1->run(RELEASE); //begins running the motor in port 1
+	myMotor2->run(RELEASE); //begins running the motor in port 2
+	irrecv.enableIRIn(); //starts the infrared receiver
+	Serial.begin(9600); //starts monitoring the values from the analog input
+}
+
+void loop()
+{
+    //return;
+	if (irrecv.decode(&results))
+	{
+		Serial.println(results.value, HEX); //sends the IR signal code to the serial monitor
+		/*the switch/case statement tells the Arduino what it should do
+		  when it receives an IR signal. If the signal is unknown, it will
+		  stop the wheels until a known signal is received.*/
+		switch(results.value)
+		{
+			case 0xFD807F: //if "forward" is pressed, the motors run forward
+				myMotor1->run(FORWARD);
+				myMotor2->run(FORWARD);
+				myMotor1->setSpeed(50);
+				myMotor2->setSpeed(50);
+				delay(50);
+				break;
+
+			case 0xFD20DF: //if left is pressed, the motors pivot counterclockwise
+				myMotor1->run(BACKWARD);
+				myMotor2->run(FORWARD);
+				myMotor1->setSpeed(50);
+				myMotor2->setSpeed(50);
+				delay(50);
+				break;
+
+			case 0xFD906F: //if right is pressed, the motors pivot clockwise
+				myMotor1->run(BACKWARD);
+				myMotor2->run(BACKWARD);
+				myMotor1->setSpeed(50);
+				myMotor2->setSpeed(50);
+				delay(50);
+				break;
+
+			case 0xFD609F: //if back is pressed, the motors run backwards
+				myMotor1->run(FORWARD);
+				myMotor2->run(BACKWARD);
+				myMotor1->setSpeed(50);
+				myMotor2->setSpeed(50);
+				delay(50);
+				break;
+
+			default: //if an undefined button is pressed, the motors stop
+				myMotor1->setSpeed(0);
+				myMotor2->setSpeed(0);
+				delay(50);;
+				break;
+		}
+		irrecv.resume(); // Receives the next signal
+	}
+}
+/*
+Peter Fickenwirth's Code
+22.201 Robot Project
+Fall Semester 2014=5
+*/
