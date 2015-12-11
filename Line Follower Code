@@ -1,0 +1,126 @@
+/*this tells the program itself to start
+referencing from the necessary libraries to
+know what certain commands in the setup and loop mean*/
+#include <Wire.h>
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_PWMServoDriver.h"
+#include <Servo.h>
+//this tells the arduino that it will be using a motor shield and two DC motors run through ports 1 and 2
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+Adafruit_DCMotor *myMotor1 = AFMS.getMotor(1); //left motor
+Adafruit_DCMotor *myMotor2 = AFMS.getMotor(2); //right motor
+
+
+void setup()
+{
+	AFMS.begin(); //begins running through the motor shield
+	myMotor1->run(RELEASE); //begins running the motor in port 1
+	myMotor2->run(RELEASE); //begins running the motor in port 2
+	Serial.begin(9600); //starts monitoring the values from the analog input
+}
+
+void loop()
+{
+	//return;
+	int left = A2; //left line sensor
+	int center = A1; //middle line sensor
+	int right = A0; //right line sensor
+	Serial.println(analogRead(center)); //prints the analog readigns to the serial monitor
+
+	/*
+	  the following while loop tells the arduino to
+	  follow a line as long as it is on a table. It will
+	  adjust its path by stopping the motor opposite of the
+	  line sensor that has come off the line.
+	*/
+
+//	while(analogRead(left) < 200 && analogRead(center) < 200 && analogRead(right) < 200)
+//	{
+		if (analogRead(left) < 500 && analogRead(center) > 500 && analogRead(right) < 500)
+		{
+			myMotor1->run(FORWARD);
+			myMotor2->run(FORWARD);
+			myMotor1->setSpeed(80);
+			myMotor2->setSpeed(80);
+			delay(5);
+
+		}
+		if (analogRead(left) >= 500)
+		{
+			myMotor1->run(FORWARD);
+			myMotor2->run(FORWARD);
+			myMotor1->setSpeed(80);
+			myMotor2->setSpeed(0);
+			delay(5);
+		}
+		if (analogRead(right) >= 500)
+		{
+			myMotor1->run(FORWARD);
+			myMotor2->run(FORWARD);
+			myMotor1->setSpeed(0);
+			myMotor2->setSpeed(80);
+			delay(5);
+		}
+		if(analogRead(left) >= 500 && analogRead(center) <= 500)
+		{
+			myMotor1->run(FORWARD);
+			myMotor2->run(BACKWARD);
+			myMotor1->setSpeed(80);
+			myMotor2->setSpeed(80);
+			delay(5);
+		}
+		if(analogRead(right) >= 500 && analogRead(center) <= 500)
+		{
+			myMotor1->run(BACKWARD);
+			myMotor2->run(FORWARD);
+			myMotor1->setSpeed(80);
+			myMotor2->setSpeed(80);
+			delay(5);
+		}
+//	}
+    else{
+    		myMotor1->run(FORWARD);
+			myMotor2->run(FORWARD);
+			myMotor1->setSpeed(80);
+			myMotor2->setSpeed(80);
+			delay(5);
+    }
+}
+	/*
+	  the following two if statements tell the robot that if one of the sensors goes
+	  over the edge of a table that it should stop back up, and turn away from the
+	  edge and then resume its previous function
+	*/
+
+	if (analogRead(left) >= 200 || analogRead(center) >= 200)
+	{
+		myMotor1->run(BACKWARD);
+		myMotor2->run(BACKWARD);
+		myMotor1->setSpeed(50);
+		myMotor2->setSpeed(50);
+		delay(1000);
+		myMotor1->run(FORWARD);
+		myMotor2->run(BACKWARD);
+		myMotor1->setSpeed(50);
+		myMotor2->setSpeed(50);
+		delay(1000);
+	}
+	if (analogRead(right) >= 200)
+	{
+		myMotor1->run(BACKWARD);
+		myMotor2->run(BACKWARD);
+		myMotor1->setSpeed(50);
+		myMotor2->setSpeed(50);
+		delay(1000);
+		myMotor1->run(BACKWARD);
+		myMotor2->run(FORWARD);
+		myMotor1->setSpeed(50);
+		myMotor2->setSpeed(50);
+		delay(1000);
+	}
+}
+/*
+Peter Fickenwirth's Code
+22.201 Robot Project
+Fall Semester 2014=5
+*/
